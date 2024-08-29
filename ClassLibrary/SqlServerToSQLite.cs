@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using System.Data;
 using System.Data.SqlClient;
 using System.Data.SQLite;
-using System.Threading;
 using System.Text.RegularExpressions;
-using System.IO;
 using log4net;
 
 namespace ClassLibrary
@@ -79,7 +75,6 @@ namespace ClassLibrary
                     {
                         handler(true, true, 100, "Finished converting database");
                     }
-                    
                 }
                 catch (Exception ex)
                 {
@@ -89,7 +84,6 @@ namespace ClassLibrary
                     {
                         handler(true, false, 100, ex.Message);
                     }
-                    
                 } // catch
             //});
             //ThreadPool.QueueUserWorkItem(wc);
@@ -442,6 +436,8 @@ namespace ClassLibrary
                 return DbType.Double;
             if (cs.ColumnType == "timestamp" || cs.ColumnType == "datetime" || cs.ColumnType == "datetime2" || cs.ColumnType == "date" || cs.ColumnType == "time")
                 return DbType.DateTime;
+            if (cs.ColumnType == "datetimeoffset")
+                return DbType.DateTimeOffset;
             if (cs.ColumnType == "nchar" || cs.ColumnType == "char")
                 return DbType.String;
             if (cs.ColumnType == "uniqueidentifier" || cs.ColumnType == "guid")
@@ -1139,21 +1135,10 @@ namespace ClassLibrary
         /// <param name="dataType">The datatype to validate.</param>
         private static void ValidateDataType(string dataType)
         {
-            if (dataType == "int" || dataType == "smallint" ||
-                dataType == "bit" || dataType == "float" ||
-                dataType == "real" || dataType == "nvarchar" ||
-                dataType == "varchar" || dataType == "timestamp" ||
-                dataType == "varbinary" || dataType == "image" ||
-                dataType == "text" || dataType == "ntext" ||
-                dataType == "bigint" ||
-                dataType == "char" || dataType == "numeric" ||
-                dataType == "binary" || dataType == "smalldatetime" ||
-                dataType == "smallmoney" || dataType == "money" ||
-                dataType == "tinyint" || dataType == "uniqueidentifier" ||
-                dataType == "xml" || dataType == "sql_variant" || dataType == "datetime2" || dataType == "date" || dataType == "time" ||
-                dataType == "decimal" || dataType == "nchar" || dataType == "datetime")
-                return;
-            throw new ApplicationException("Validation failed for data type [" + dataType + "]");
+            if (!validDataTypes.Contains(dataType))
+            {
+                throw new ApplicationException("Validation failed for data type [" + dataType + "]");
+            }
         }
 
         /// <summary>
@@ -1387,6 +1372,14 @@ namespace ClassLibrary
         private static Regex _keyRx = new Regex(@"(([a-zA-Z_äöüÄÖÜß0-9\.]|(\s+))+)(\(\-\))?");
         private static Regex _defaultValueRx = new Regex(@"\(N(\'.*\')\)");
         private static ILog _log = LogManager.GetLogger(typeof(SqlServerToSQLite));
+        private static readonly HashSet<string> validDataTypes = new HashSet<string>
+        {
+            "int", "smallint", "bit", "float", "real", "nvarchar", "varchar",
+            "timestamp", "varbinary", "image", "text", "ntext", "bigint",
+            "char", "numeric", "binary", "smalldatetime", "smallmoney", "money",
+            "tinyint", "uniqueidentifier", "xml", "sql_variant", "datetime2",
+            "date", "time", "decimal", "nchar", "datetime", "datetimeoffset"
+        };
         #endregion
     }
 
